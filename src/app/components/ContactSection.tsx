@@ -25,6 +25,9 @@ const subjectOptions = [
   'General Inquiry',
 ];
 
+const SPREADSHEET_ID = '1IObyxIgOiUkkmiYXl8Ms-8zgj4y-272JoDeAHDLMqek';
+const SHEET_NAME = 'Sheet1';
+
 export default function ContactSection() {
   const [form, setForm] = useState<FormData>({
     name: '',
@@ -36,6 +39,7 @@ export default function ContactSection() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
@@ -60,15 +64,32 @@ export default function ContactSection() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
     setSubmitting(true);
-    // Simulate submission
-    setTimeout(() => {
-      setSubmitting(false);
+    setSubmitError(null);
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send message');
+      }
+
       setSubmitted(true);
-    }, 1200);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+      setSubmitError(message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -252,33 +273,40 @@ export default function ContactSection() {
                     name="message"
                     value={form.message}
                     onChange={handleChange}
+                    placeholder="Tell me about the opportunity or project..."
                     rows={5}
-                    placeholder="Tell me about the opportunity or your project..."
                     className="w-full bg-muted/50 border rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-gold/60 focus:bg-muted transition-all duration-200 resize-none"
                     style={{ borderColor: errors.message ? '#EF4444' : 'var(--border)' }}
                   />
                   {errors.message && <p className="text-red-400 text-xs mt-1">{errors.message}</p>}
                 </div>
 
-                {/* Submit */}
+                {submitError && (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                    <Icon name="ExclamationCircleIcon" size={16} className="text-red-400 shrink-0" />
+                    <p className="text-red-400 text-xs">{submitError}</p>
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-gold text-primary-foreground rounded-lg font-semibold text-sm hover:bg-accent transition-all duration-200 gold-glow disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full py-3.5 px-6 rounded-xl font-semibold text-sm transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                  style={{
+                    background: submitting ? 'rgba(212,175,55,0.3)' : 'linear-gradient(135deg, #D4AF37 0%, #F0D060 100%)',
+                    color: '#0A0A0F',
+                  }}
                 >
                   {submitting ? (
-                    <>
-                      <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                       </svg>
                       Sending...
-                    </>
+                    </span>
                   ) : (
-                    <>
-                      <Icon name="PaperAirplaneIcon" size={16} />
-                      Send Message
-                    </>
+                    'Send Message'
                   )}
                 </button>
               </form>
@@ -289,3 +317,5 @@ export default function ContactSection() {
     </section>
   );
 }
+
+export { SPREADSHEET_ID, SHEET_NAME };
