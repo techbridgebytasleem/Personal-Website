@@ -63,6 +63,18 @@ export async function POST(request: NextRequest) {
       throw new Error(`Google Sheets API error: ${errorData.error?.message || 'Unknown error'}`);
     }
 
+    // Trigger n8n webhook with form data
+    try {
+      await fetch('https://n8n.srv1141659.hstgr.cloud/webhook/fcf6cd06-13c9-4487-9d22-39e4adb3a35a', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, company: company || '', subject: subject || '', message }),
+      });
+    } catch {
+      // Non-blocking: log but don't fail the request if n8n webhook errors
+      console.error('n8n webhook call failed');
+    }
+
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Internal server error';
