@@ -16,7 +16,7 @@ const skillGroups: SkillGroup[] = [
     category: 'Cloud Platforms',
     icon: 'CloudIcon',
     color: '#D4AF37',
-    skills: ['Amazon Web Services (AWS)', 'Google Cloud Platform (GCP)', 'Microsoft Azure', 'Multi-Cloud Architecture', 'Cloud Migration Strategy', 'Amazon EC2 & Lambda'],
+    skills: ['Amazon Web Services (AWS)', 'Google Cloud Platform (GCP)', 'Microsoft Azure', 'Multi-Cloud Architecture', 'Cloud Migration Strategy'],
     colSpan: 'lg:col-span-2',
   },
   {
