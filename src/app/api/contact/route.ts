@@ -12,23 +12,31 @@ async function getAccessToken(): Promise<string> {
     throw new Error('Missing Google OAuth credentials. Please set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REFRESH_TOKEN environment variables.');
   }
 
+  const params = new URLSearchParams({
+    client_id: clientId,
+    client_secret: clientSecret,
+    refresh_token: refreshToken,
+    grant_type: 'refresh_token',
+  });
+
   const response = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      refresh_token: refreshToken,
-      grant_type: 'refresh_token',
-    }),
+    body: params.toString(),
   });
 
+  const data = await response.json();
+
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`Failed to get access token: ${errorData.error_description || errorData.error || 'Unknown error'}`);
+    // Log full error details server-side for debugging
+    console.error('Google OAuth token error:', JSON.stringify(data, null, 2));
+    console.error('Client ID prefix:', clientId?.substring(0, 20));
+    console.error('Refresh token prefix:', refreshToken?.substring(0, 10));
+
+    const detail = data.error_description || data.error || 'Unknown error';
+    throw new Error(`Failed to get access token: ${detail} (hint: ensure the refresh token was generated using the same Client ID and Secret currently in your environment variables, and that the OAuth consent screen is published)`);
   }
 
-  const data = await response.json();
   return data.access_token;
 }
 
@@ -60,12 +68,14 @@ export async function POST(request: NextRequest) {
 
     if (!sheetsResponse.ok) {
       const errorData = await sheetsResponse.json();
+      console.error('Google Sheets API error:', JSON.stringify(errorData, null, 2));
       throw new Error(`Google Sheets API error: ${errorData.error?.message || 'Unknown error'}`);
     }
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Internal server error';
+    console.error('Contact form error:', message);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
