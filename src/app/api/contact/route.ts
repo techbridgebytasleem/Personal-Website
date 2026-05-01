@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Name, email, and message are required.' }, { status: 400 });
     }
 
-    const webhookResponse = await fetch('https://n8n.srv1141659.hstgr.cloud/webhook-test/fcf6cd06-13c9-4487-9d22-39e4adb3a35a', {
+    const webhookResponse = await fetch('https://n8n.srv1141659.hstgr.cloud/webhook-test/f729bb94-bd18-4462-bf8b-ef1079e0266f', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, company: company || '', subject: subject || '', message }),
